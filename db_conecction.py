@@ -1,45 +1,65 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy import Column, String, Date
-from datetime import date
-#would be better to create a new file just for the imports? 
+from sqlalchemy.orm import sessionmaker
+from models import Post, Base
+from sqlalchemy import inspect
 
-#i literally have no idea if this is the right URL, i just tought it would be the conecction host
-#"jdbc:postgresql://localhost:5432/postgres" 
-DATABASE_URL = "postgresql://postgres:mysecretpassword@localhost:5432/postgres"
+#if needed 
+#connect_args={'options': '-c timezone=America/Sao_Paulo'})
 
-engine = create_engine(DATABASE_URL)
-session = sessionmaker(bind=engine)
-session = session()
-#esse base = declarative_base() aqui foi o copilot q me safou
-Base = declarative_base()
-#alr created the table at dbeaver, will create another one here just so i can test the code
-class Post(Base):
-    __tablename__ = "post"
-    title = Column(String(100))
-    description = Column(String(250))
-    post_date = Column(Date)
-    news_url = Column(String(100), primary_key=True)
-    ia_answer = Column(String(280))
-#copilot describe it to help identify the title and url as string, necessary indeed or nah?
-    def __repr__(self):
-        return f"<Post(title={self.title}, url={self.news_url})>"
-Base.metadata.create_all(engine)
+class PostActions:
+    def __init__(self,db_url: str):
+        #add echo = True
+        self.engine = create_engine(db_url)
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
+
+    @staticmethod
+    def object_as_dict(obj):
+        """Converts a SQLAlchemy ORM object to a dictionary."""
+        return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
+
+    def add_post(self, post: Post):
+        new_post = Post(title=post["title"], description=post["description"], ia_answer=post["ia_answer"], news_url=post["url"])
+        print(new_post)
+        self.session.add(new_post)
+        return self.session.commit()
     
-example_post = Post(
-     title = "example tittle",
-	description = 'example description',
-    post_date = date.today(),
-    news_url = "https://naoseioquetofazendomastoseguindoalibrary.com.fudeu",
-    ia_answer = 'se isso fechar a conexão deve inserir na tabela se não eu vou dormir'
-)
-#learnt quite late that you have to commit as you usually would with dbeaver
-try:
-    session.add(example_post)
-    session.commit()
-    print("Post inserted successfully.")
-except Exception as e:
-    session.rollback()
-    print("Error inserting post:", e)
-finally:
-    session.close()
+    def create_tables(self):
+        return Base.metadata.create_all(self.engine)
+
+    def gest_last_post(self):
+        post = self.session.query(Post).order_by(Post.id.desc()).first()
+        return post
+    
+    def get_posts(self):
+        posts = self.session.query(Post).all()
+        return posts
+
+    def get_post_by_url(self, url: str):
+        post = self.session.query(Post).filter(Post.news_url == url).first()
+        return post
+
+    def delete_post(self, url: str):
+        post = self.session.query(Post).filter(Post.news_url == url).first()
+        if post:
+            self.session.delete(post)
+            self.session.commit()
+            return True
+        return False
+
+    
+#EXAMPLE USAGE
+DATABASE_URL = "postgresql://postgres:mysecretpassword@localhost:5432/postgres"
+postActions = PostActions(DATABASE_URL)
+# print(postActions.create_tables())
+new_post = {'title':'bueno mija pra cima', 'description': 'qualquer coisa', "ia_answer": 'bueno aloprou','url':'https://buenoalopra.com'}
+#add for in loop to get all
+#  post = postActions.get_posts()
+# print(postActions.object_as_dict(post[0]))
+
+
+# post = postActions.get_post_by_url('https://buenoalopra.com')
+# print(postActions.object_as_dict(post))
+
+# post = postActions.delete_post('https://buenoalopra.com')
+# print(post)
