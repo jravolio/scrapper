@@ -1,30 +1,21 @@
 import scrapy
 import logging
+import json
+import os
+import time
+from scrapy.crawler import CrawlerProcess
 
 
 class GloboSpider(scrapy.Spider):
     name = "globo"
     start_urls = ["https://ge.globo.com/"]
 
-    # Feed export: save everything the spider yields into articles.json
-    custom_settings = {
-        "FEEDS": {
-            "articles.json": {
-                "format": "json",
-                "encoding": "utf8",
-                "indent": 4
-            }
-        }
-    }
-
     def parse(self, response):
-        articles = response.xpath(
-            "//div[contains(@class,'bastian-page')]/div/div")
+        articles = response.xpath("//div[contains(@class,'bastian-page')]/div/div")
         logging.info(f"Found {len(articles)} candidate articles")
 
         for article in articles:
-            title = article.xpath(
-                ".//p[contains(@elementtiming,'text-ssr')]/text()").get()
+            title = article.xpath(".//p[contains(@elementtiming,'text-ssr')]/text()").get()
             link = article.xpath(".//a/@href").get()
 
             if not link:
@@ -33,7 +24,7 @@ class GloboSpider(scrapy.Spider):
             yield response.follow(
                 link,
                 callback=self.parse_article,
-                meta={"headline": title},
+                meta={"headline": title, "url": link},
             )
 
     def parse_article(self, response):
@@ -43,6 +34,6 @@ class GloboSpider(scrapy.Spider):
 
         yield {
             "headline": response.meta["headline"],
-            "url": response.url,
+            "url": response.meta["url"],
             "first_paragraph": first_para,
         }

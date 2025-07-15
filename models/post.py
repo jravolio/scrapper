@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import date
 from sqlalchemy import BigInteger, DateTime
 from sqlalchemy.sql import func
+
 Base = declarative_base()
 
 class Post(Base):

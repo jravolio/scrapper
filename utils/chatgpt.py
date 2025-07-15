@@ -24,7 +24,6 @@ class ChatGPT:
         
         title = response.output_text
         
-        # Ensure the title is at most 100 characters
         return title[:100]
 
 # Example usage:
