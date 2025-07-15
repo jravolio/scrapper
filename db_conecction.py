@@ -22,7 +22,8 @@ class PostActions:
         new_post = Post(title=post["title"], description=post["description"], ia_answer=post["ia_answer"], news_url=post["url"])
         print(new_post)
         self.session.add(new_post)
-        return self.session.commit()
+        self.session.commit()
+        return new_post
     
     def create_tables(self):
         return Base.metadata.create_all(self.engine)
@@ -51,15 +52,25 @@ class PostActions:
 #EXAMPLE USAGE
 DATABASE_URL = "postgresql://postgres:mysecretpassword@localhost:5432/postgres"
 postActions = PostActions(DATABASE_URL)
-# print(postActions.create_tables())
-new_post = {'title':'bueno mija pra cima', 'description': 'qualquer coisa', "ia_answer": 'bueno aloprou','url':'https://buenoalopra.com'}
-#add for in loop to get all
-#  post = postActions.get_posts()
-# print(postActions.object_as_dict(post[0]))
+new_post = {'title':'bueno mija pra cima', 'description': 'qualquer coisa', "ia_answer": 'bueno aloprou','url':'https://teste2.com'}
 
-
-# post = postActions.get_post_by_url('https://buenoalopra.com')
+#add_post 
+# post = postActions.add_post(new_post)
 # print(postActions.object_as_dict(post))
 
-# post = postActions.delete_post('https://buenoalopra.com')
+#get_last_post
+# post = postActions.gest_last_post()
+# print(postActions.object_as_dict(post))
+
+#get_posts
+# posts = postActions.get_posts()
+# for post in posts:
+#     print(postActions.object_as_dict(post))
+
+#get_posts_by_url
+# post = postActions.get_post_by_url('PasteURL')
+# print(postActions.object_as_dict(post))
+
+#delete_post
+# post = postActions.delete_post('PasteURL')
 # print(post)
