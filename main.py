@@ -17,15 +17,13 @@ def run_spider():
     items = []
 
     class CustomGloboSpider(GloboSpider):
-        # No parse original, mantenha só para enfileirar requisições
         def parse(self, response):
             yield from super().parse(response)
 
-        # Aqui a mágica: intercepta os dicionários de parse_article
         def parse_article(self, response):
             for article in super().parse_article(response):
-                items.append(article)   # guarda em memória
-                yield article           # garante que o spider "finalize" o item
+                items.append(article)
+                yield article
 
     process = CrawlerProcess(settings={"LOG_LEVEL": "INFO"})
     process.crawl(CustomGloboSpider)
@@ -64,21 +62,17 @@ if __name__ == "__main__":
                     original_title=article["title"]
                 )
 
-                post_record = {
-                    "title": article["title"],
-                    "description": article["first_paragraph"],
-                    "ai_title": catchy_title,
-                    "news_url": article["url"]
-                }
-                saved = db.add_post(title=article["title"],
-                                    description=article["first_paragraph"],
-                                    ai_title=catchy_title,
-                                    news_url=article["url"])
-                logging.info(f"Saved to DB: {saved.id} – {saved.news_url}")
-
                 tweet = f"{catchy_title}\n{article['url']}"
                 twitter.post_tweet(tweet)
                 logging.info(f"Tweeted: {tweet}")
+
+                saved = db.add_post(title=article["title"],
+                                    description=article["first_paragraph"],
+                                    ai_title=catchy_title,
+                                    news_url=article["url"],
+                                    tweet_id=tweet)
+                logging.info(f"Saved to DB: {saved.id} – {saved.news_url}")
+
 
             except Exception as e:
                 logging.error(
@@ -86,4 +80,4 @@ if __name__ == "__main__":
 
         seen_articles.extend(new_posts)
         logging.info("Sleeping for 10 minutes…")
-        # time.sleep(600)
+        time.sleep(600) # run every 10 minutes

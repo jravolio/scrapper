@@ -34,8 +34,8 @@ class PostActions:
         """Converts a SQLAlchemy ORM object to a dictionary."""
         return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
 
-    def add_post(self, title: str, description: str, ai_title: str, news_url: str):
-        new_post = Post(title=title, description=description, ai_title=ai_title, news_url=news_url)
+    def add_post(self, title: str, description: str, ai_title: str, news_url: str, tweet_id: int = None):
+        new_post = Post(title=title, description=description, ai_title=ai_title, news_url=news_url, tweet_id=tweet_id)
         self.session.add(new_post)
         self.session.commit()
         return new_post

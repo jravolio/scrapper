@@ -14,11 +14,13 @@ class Post(Base):
     created_at = Column(DateTime(timezone= True), server_default= func.now())
     news_url = Column(String(300), primary_key=True)
     ai_title = Column(String(300))
+    tweet_id = Column(BigInteger, nullable=True)
 
-    def __init__(self, title, description, news_url, ai_title):
+    def __init__(self, title, description, news_url, ai_title, tweet_id=None):
         self.title = title
         self.description = description
         self.news_url = news_url
         self.ai_title = ai_title
+        self.tweet_id = tweet_id
     
     
