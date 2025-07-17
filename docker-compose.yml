@@ -19,6 +19,7 @@ services:
       dockerfile: Dockerfile
     container_name: scrapper_service
     restart: always
+    # entrypoint: ["tail", "-f", "/dev/null"]
     depends_on:
       - db
     environment:
@@ -29,13 +30,12 @@ services:
       CONSUMER_SECRET_TWITTER: ${CONSUMER_SECRET_TWITTER}
       ACCESS_TOKEN_TWITTER: ${ACCESS_TOKEN_TWITTER}
       ACCESS_TOKEN_TWITTER_SECRET: ${ACCESS_TOKEN_TWITTER_SECRET}
-    volumes:
-      - ./scrapper:/app
 
   streamlit:
     build:
       context: .
       dockerfile: streamlit/Dockerfile
+    # entrypoint: ["tail", "-f", "/dev/null"]
     container_name: streamlit_service
     restart: always
     depends_on:
