@@ -1,9 +1,5 @@
 import scrapy
 import logging
-import json
-import os
-import time
-from scrapy.crawler import CrawlerProcess
 
 
 class GloboSpider(scrapy.Spider):
