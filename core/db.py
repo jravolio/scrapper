@@ -34,15 +34,17 @@ class PostActions:
         """Converts a SQLAlchemy ORM object to a dictionary."""
         return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
 
-    def add_post(self, post: Post):
-        new_post = Post(title=post["title"], description=post["description"], ia_answer=post["ia_answer"], news_url=post["url"])
-        print(new_post)
+    def add_post(self, title: str, description: str, ai_title: str, news_url: str):
+        new_post = Post(title=title, description=description, ai_title=ai_title, news_url=news_url)
         self.session.add(new_post)
         self.session.commit()
         return new_post
     
     def create_tables(self):
-        return Base.metadata.create_all(self.engine)
+        inspector = inspect(self.engine)
+        tables = inspector.get_table_names()
+        if 'posts' not in tables:
+            Base.metadata.create_all(self.engine)
 
     def gest_last_post(self):
         post = self.session.query(Post).order_by(Post.id.desc()).first()
@@ -71,7 +73,7 @@ class PostActions:
 # new_post = {
 #     'title': 'AI Revolutionizes News Reporting',
 #     'description': 'A detailed look at how artificial intelligence is transforming the journalism industry, from automated content creation to personalized news feeds.',
-#     'ia_answer': 'AI enables faster, more accurate news delivery and helps journalists focus on in-depth analysis.',
+#     'ai_title': 'AI enables faster, more accurate news delivery and helps journalists focus on in-depth analysis.',
 #     'url': 'https://news.example.com/ai-revolution-news-reporting'
 # }
 

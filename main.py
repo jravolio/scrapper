@@ -1,16 +1,11 @@
 from scrapy.crawler import CrawlerProcess
 import logging
-import json
 import time
 from spiders.ge import GloboSpider
-
-
-def load_articles():
-    pass
-
-
-def save_articles(articles):
-    pass
+from utils.twitter import Twitter
+from core.settings import settings
+from utils.chatgpt import ChatGPT
+from core.db import PostActions
 
 
 def detect_new_articles(old, new):
@@ -18,32 +13,77 @@ def detect_new_articles(old, new):
     return [a for a in new if a["url"] not in old_urls]
 
 
-def post_to_twitter(article):
-    print(f"Would post to Twitter: {article['headline']} - {article['url']}")
-
-
 def run_spider():
     items = []
-    
-    process = CrawlerProcess(settings={
-        "ITEM_PIPELINES": {__name__ + ".CollectorPipeline": 1},
-        "LOG_LEVEL": "ERROR",
-    })
-    process.crawl(GloboSpider)
+
+    class CustomGloboSpider(GloboSpider):
+        # No parse original, mantenha só para enfileirar requisições
+        def parse(self, response):
+            yield from super().parse(response)
+
+        # Aqui a mágica: intercepta os dicionários de parse_article
+        def parse_article(self, response):
+            for article in super().parse_article(response):
+                items.append(article)   # guarda em memória
+                yield article           # garante que o spider "finalize" o item
+
+    process = CrawlerProcess(settings={"LOG_LEVEL": "INFO"})
+    process.crawl(CustomGloboSpider)
     process.start()
     return items
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
+    db = PostActions(settings.DB_URL)
+    db.create_tables()
+
+    twitter = Twitter(
+        bearer_token=settings.BEARER_TOKEN_TWITTER,
+        consumer_key=settings.CONSUMER_KEY_TWITTER,
+        consumer_secret=settings.CONSUMER_SECRET_TWITTER,
+        access_token=settings.ACCESS_TOKEN_TWITTER,
+        access_token_secret=settings.ACCESS_TOKEN_TWITTER_SECRET,
+    )
+
+    chatgpt = ChatGPT(api_key=settings.OPENAI_API_KEY)
+
+    seen_articles = []
+    new_articles = run_spider()
+
     while True:
         logging.info("Starting scrape...")
-        old_articles = load_articles()
-        new_articles = run_spider()
-        save_articles(new_articles)
 
-        new_posts = detect_new_articles(old_articles, new_articles)
-        for article in new_posts:
-            post_to_twitter(article)  # Stub
+        new_posts = detect_new_articles(seen_articles, new_articles)
 
-        logging.info(f"Sleeping for 10 minutes...")
-        time.sleep(600)
+        for article in new_articles:
+            try:
+                catchy_title = chatgpt.generate_catchy_title(
+                    news_content=article["first_paragraph"],
+                    original_title=article["title"]
+                )
+
+                post_record = {
+                    "title": article["title"],
+                    "description": article["first_paragraph"],
+                    "ai_title": catchy_title,
+                    "news_url": article["url"]
+                }
+                saved = db.add_post(title=article["title"],
+                                    description=article["first_paragraph"],
+                                    ai_title=catchy_title,
+                                    news_url=article["url"])
+                logging.info(f"Saved to DB: {saved.id} – {saved.news_url}")
+
+                tweet = f"{catchy_title}\n{article['url']}"
+                twitter.post_tweet(tweet)
+                logging.info(f"Tweeted: {tweet}")
+
+            except Exception as e:
+                logging.error(
+                    f"Failed to process article {article['url']}: {e}")
+
+        seen_articles.extend(new_posts)
+        logging.info("Sleeping for 10 minutes…")
+        # time.sleep(600)

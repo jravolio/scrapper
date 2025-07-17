@@ -28,12 +28,12 @@ class GloboSpider(scrapy.Spider):
             )
 
     def parse_article(self, response):
-        first_para = response.xpath(
+        first_paragraph = response.xpath(
             "(//p[contains(@class,'content-text__container')])[1]/text()"
         ).get()
 
         yield {
-            "headline": response.meta["headline"],
+            "title": response.meta["headline"],
             "url": response.meta["url"],
-            "first_paragraph": first_para,
+            "first_paragraph": first_paragraph,
         }

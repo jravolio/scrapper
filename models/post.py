@@ -9,16 +9,16 @@ Base = declarative_base()
 class Post(Base):
     __tablename__ = "post"
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    title = Column(String(100))
+    title = Column(String(300))
     description = Column(String(250))
     created_at = Column(DateTime(timezone= True), server_default= func.now())
-    news_url = Column(String(100), primary_key=True)
-    ia_answer = Column(String(280))
+    news_url = Column(String(300), primary_key=True)
+    ai_title = Column(String(300))
 
-    def __init__(self, title, description, news_url, ia_answer):
+    def __init__(self, title, description, news_url, ai_title):
         self.title = title
         self.description = description
         self.news_url = news_url
-        self.ia_answer = ia_answer
+        self.ai_title = ai_title
     
     
