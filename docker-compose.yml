@@ -34,7 +34,8 @@ services:
 
   streamlit:
     build:
-      context: ./streamlit
+      context: .
+      dockerfile: streamlit/Dockerfile
     container_name: streamlit_service
     restart: always
     depends_on:
@@ -43,8 +44,6 @@ services:
       - "8501:8501"
     environment:
       DB_URL: postgresql://user:secretpassword@db:5432/posts
-    volumes:
-      - ./streamlit_app:/app
 
 volumes:
   postgres_data:
