@@ -1,0 +1,50 @@
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_scrapper
+    restart: always
+    environment:
+      POSTGRES_DB: posts
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: secretpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  scrapper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scrapper_service
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DB_URL: postgresql://user:secretpassword@db:5432/posts
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      BEARER_TOKEN_TWITTER: ${BEARER_TOKEN_TWITTER}
+      CONSUMER_KEY_TWITTER: ${CONSUMER_KEY_TWITTER}
+      CONSUMER_SECRET_TWITTER: ${CONSUMER_SECRET_TWITTER}
+      ACCESS_TOKEN_TWITTER: ${ACCESS_TOKEN_TWITTER}
+      ACCESS_TOKEN_TWITTER_SECRET: ${ACCESS_TOKEN_TWITTER_SECRET}
+    volumes:
+      - ./scrapper:/app
+
+  streamlit:
+    build:
+      context: ./streamlit
+    container_name: streamlit_service
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8501:8501"
+    environment:
+      DB_URL: postgresql://user:secretpassword@db:5432/posts
+    volumes:
+      - ./streamlit_app:/app
+
+volumes:
+  postgres_data:
