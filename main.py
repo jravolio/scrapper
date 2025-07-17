@@ -73,7 +73,8 @@ if __name__ == "__main__":
                                     tweet_id=tweet_id)
                 logging.info(f"Saved to DB: {saved.id} – {saved.news_url}")
 
-
+                #TODO: implement a decent logic to avoid rate limits
+                time.sleep(600)  # Sleep to avoid hitting rate limits
             except Exception as e:
                 logging.error(
                     f"Failed to process article {article['url']}: {e}")
