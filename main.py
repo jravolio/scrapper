@@ -63,14 +63,14 @@ if __name__ == "__main__":
                 )
 
                 tweet = f"{catchy_title}\n{article['url']}"
-                twitter.post_tweet(tweet)
+                tweet_id = twitter.post_tweet(tweet)
                 logging.info(f"Tweeted: {tweet}")
 
                 saved = db.add_post(title=article["title"],
                                     description=article["first_paragraph"],
                                     ai_title=catchy_title,
                                     news_url=article["url"],
-                                    tweet_id=tweet)
+                                    tweet_id=tweet_id)
                 logging.info(f"Saved to DB: {saved.id} – {saved.news_url}")
 
 
