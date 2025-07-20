@@ -7,6 +7,7 @@ from core.settings import settings
 from utils.chatgpt import ChatGPT
 from core.db import PostActions
 
+DELAY_TIME = 95 * 60  # 95 minutes in seconds
 
 def detect_new_articles(old, new):
     old_urls = {a["url"] for a in old}
@@ -57,6 +58,11 @@ if __name__ == "__main__":
 
         for article in new_articles:
             try:
+                existing_post = db.get_post_by_url(article['url'])
+                if existing_post:
+                    logging.info(f"Skipping already processed article: {article['url']}")
+                    continue # skip if already processed
+
                 catchy_title = chatgpt.generate_catchy_title(
                     news_content=article["first_paragraph"],
                     original_title=article["title"]
@@ -73,12 +79,11 @@ if __name__ == "__main__":
                                     tweet_id=tweet_id)
                 logging.info(f"Saved to DB: {saved.id} – {saved.news_url}")
 
-                #TODO: implement a decent logic to avoid rate limits
-                time.sleep(600)  # Sleep to avoid hitting rate limits
+                logging.info(f"Sleeping for {DELAY_TIME} minutes…")
+                time.sleep(DELAY_TIME)  # Sleep to avoid hitting rate limits
             except Exception as e:
                 logging.error(
                     f"Failed to process article {article['url']}: {e}")
 
         seen_articles.extend(new_posts)
-        logging.info("Sleeping for 10 minutes…")
-        time.sleep(600) # run every 10 minutes
+        time.sleep(DELAY_TIME)
