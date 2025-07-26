@@ -82,6 +82,7 @@ if __name__ == "__main__":
                 logging.info(f"Sleeping for {DELAY_TIME} minutes…")
                 time.sleep(DELAY_TIME)  # Sleep to avoid hitting rate limits
             except Exception as e:
+                db.session.rollback()
                 logging.error(
                     f"Failed to process article {article['url']}: {e}")
 
