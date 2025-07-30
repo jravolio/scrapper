@@ -9,10 +9,6 @@ from core.db import PostActions
 
 DELAY_TIME = 95 * 60  # 95 minutes in seconds
 
-def detect_new_articles(old, new):
-    old_urls = {a["url"] for a in old}
-    return [a for a in new if a["url"] not in old_urls]
-
 
 def run_spider():
     items = []
@@ -48,13 +44,10 @@ if __name__ == "__main__":
 
     chatgpt = ChatGPT(api_key=settings.OPENAI_API_KEY)
 
-    seen_articles = []
     new_articles = run_spider()
 
     while True:
         logging.info("Starting scrape...")
-
-        new_posts = detect_new_articles(seen_articles, new_articles)
 
         for article in new_articles:
             try:
@@ -86,5 +79,4 @@ if __name__ == "__main__":
                 logging.error(
                     f"Failed to process article {article['url']}: {e}")
 
-        seen_articles.extend(new_posts)
         time.sleep(DELAY_TIME)
