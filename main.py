@@ -13,7 +13,7 @@ from core.settings import settings
 from utils.chatgpt import ChatGPT
 from core.db import PostActions
 
-DELAY_TIME = 95 * 60  # 95 minutes in seconds
+DELAY_TIME = 2700  # 45 minutes in seconds
 
 
 class CustomGloboSpider(GloboSpider):
@@ -89,7 +89,7 @@ def crawl_and_process():
                 logging.error(
                     f"Failed to process article {article['url']}: {e}")
 
-        logging.info(f"Waiting {DELAY_TIME} seconds before next scrape...")
+        # logging.info(f"Waiting {DELAY_TIME} seconds before next scrape...")
         d = defer.Deferred()
         reactor.callLater(DELAY_TIME, d.callback, None)
 
